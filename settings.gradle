@@ -1,2 +1,11 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'FTC'
 include ':FtcRobotController'
-include ':Team28420'
+include ':TeamCode'

@@ -6,5 +6,6 @@ pluginManagement {
     }
 }
 
+rootProject.name = 'FTC'
 include ':FtcRobotController'
 include ':TeamCode'

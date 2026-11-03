@@ -1,0 +1,60 @@
+name: FTC CI
+
+on:
+  push:
+    branches: [master, season-start]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ftc-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: FTC build and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v4
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Run unit tests
+        run: bash ./gradlew --no-daemon :TeamCode:testDebugUnitTest --stacktrace
+
+      - name: Build Robot Controller APK
+        run: bash ./gradlew --no-daemon :FtcRobotController:assembleDebug --stacktrace
+
+      - name: Upload test reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-${{ github.sha }}
+          path: |
+            TeamCode/build/reports/tests/
+            TeamCode/build/test-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: robot-controller-${{ github.sha }}
+          path: FtcRobotController/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
